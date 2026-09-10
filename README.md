@@ -29,4 +29,4 @@ Why this matters: This matters because if I edited an earlier file changing Pass
 ### Firewall
 Ran `ufw allow OpenSSH` before `ufw enable`.
 
-Why that order: In that order because if I enable the firewall without allowing a point of entry for my machine I would have blocked any incoming connections into the system.
+Why that order: In that order because if I enable the firewall without allowing a point of entry for my machine I would have blocked any incoming connections into the system.				
