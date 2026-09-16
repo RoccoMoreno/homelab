@@ -47,5 +47,33 @@ word millionth. cat would just scroll past it.
 grep millionth data.txt — pattern first, then the file. grep prints whole
  matching lines, so "next to the word" needs no special flag.
 Typo'd the pattern first try and grep returned nothing silently — no error.
- Empty output means no match, and it can't tell you whether the pattern or the
+Empty output means no match, and it can't tell you whether the pattern or the
 data is at fault.
+
+## Level 8 -> 9
+Password was the only line in data.txt appearing exactly once.
+grep proved useless because we didn't know any patterns.
+| is a pipe: it feeds the left command's output into the right command as input.
+uniq only compares adjacent lines, so sort has to run first to group identical
+lines together.sort data.txt | uniq -u
+The right side of a pipe takes no filename
+
+## Level 9 -> 10
+Password in data.txt was binary. grep = data.txt returned binary file matches.
+strings data.txt| grep =====, strings pulls the readable text out of the binary file and piping grep filters the clean text macthing the several =.
+
+## Level 10 -> 11
+data.txt was base64-encoded text. Running base64 data.txt encodes it
+again default direction is encode.
+base64 -d data.txt
+Base64 is encoding for transport, not encryption. Output grows ~33% when
+encoding, shrinks when decoding
+
+## Level 11 -> 12
+data.txt was ROT13 — each letter shifted 13 places, wrapping at the end of
+the alphabet.
+cat data.txt | tr a-zA-Z n-za-mN-ZA-M
+tr maps set 1 to set 2 position by position, and reads only from stdin
+no filename argument, hence the cat and pipe.
+Non-letters pass through untouched.
+ROT13 is its own inverse: 13 + 13 = 26, a full lap.
