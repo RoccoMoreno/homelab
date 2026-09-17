@@ -77,3 +77,31 @@ tr maps set 1 to set 2 position by position, and reads only from stdin
 no filename argument, hence the cat and pipe.
 Non-letters pass through untouched.
 ROT13 is its own inverse: 13 + 13 = 26, a full lap.
+
+## Level 12 -> 13 
+data.txt was a hexdump of a file compressed through ~9 layers. Home directory
+is read-only, so: mkdir /tmp/rocco12, cd there, cp ~/data.txt .
+xxd -r data.txt > rocco14 reversed the hexdump back to binary. > redirects 
+output into a file instead of the screen — needed because binary would 
+garble the terminal.
+Then a loop: file to identify, decompress, file again. Three tools:
+mv x x.gz then gzip -d x.gz
+mv x x.bz2 then bzip2 -d x.bz2
+tar xf x (no rename needed; extracts to a name stored inside the archive)
+zip and bzip2 refuse to run without the right extension. tar doesn't care.
+Mistakes: renamed a tar archive to .gz and ran gzip on it after file had 
+already told me it was tar. Also ran two commands on one line and gzip treated
+the extra words as filenames. 
+Read file output before choosing the tool, one command per line.
+
+## Level 13 -> 14 
+Home directory held sshkey.private, an RSA private key, instead of a password.
+Authenticate with ssh -i <keyfile> bandit14@bandit.labs.overthewire.org -p 2220
+— -i specifies the identity file.
+Couldn't run it from inside the Bandit server: the hostname resolves 
+to 127.0.0.1 from in there, and localhost connections are blocked.
+Had to cat the key, paste it into a file on my Mac, and connect from there.
+SSH then refused the key: permissions were 0644, meaning group and others
+could read it. chmod 600 fixed it. Verbose mode (ssh -v) showed the
+server accepting the key and my own client rejecting it — the refusal
+was local, protecting me from using a key others could read.
