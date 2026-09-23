@@ -105,3 +105,92 @@ SSH then refused the key: permissions were 0644, meaning group and others
 could read it. chmod 600 fixed it. Verbose mode (ssh -v) showed the
 server accepting the key and my own client rejecting it — the refusal
 was local, protecting me from using a key others could read.
+
+## Level 14 -> 15
+Password wasn't in a file — a service listening on port 30000 hands it out 
+when you send it the current level's password.
+cat /etc/bandit_pass/bandit14 to get the current password (every level's 
+password is stored there, readable by that level's user).
+nc localhost 30000, then paste the password and press Enter. nc opens a raw 
+connection to a host and port — whatever you type is sent, whatever comes 
+back is printed. A port is a numbered channel on a machine; SSH is on 22, web 
+on 80 and 443.
+
+## Level 15 -> 16
+Same as 14 but the service on port 30001 speaks TLS, so raw nc won't work — 
+it'd send plaintext to a server expecting an encrypted handshake.
+openssl s_client -connect localhost:30001 — note host:port with a colon, 
+unlike nc's space.
+
+The handshake output shows the server's self-signed cert (CN=SnakeOil), the 
+negotiated cipher, and ~5KB exchanged before any real data moves. 
+Same exchange as every HTTPS page load, just printed instead of hidden.
+
+## Level 16 -> 17
+A service somewhere in ports 31000–32000 returns the next credentials. 
+Three stages:
+
+nmap -p 31000-32000 localhost — 5 open ports out of 1000. The range takes no 
+spaces, and nmap needs a target host.
+
+Tried each with openssl s_client -connect localhost:PORT -quiet -ign_eof. 
+Two errored immediately (not TLS). 31518 completed a handshake but echoed my 
+input straight back. 31790 was the real one.
+
+It returned an OpenSSH private key instead of a password — same handling as 
+level 13: save it on my Mac, chmod 600, then ssh -i.
+
+Lesson: scan, narrow, test each candidate, rule out. First level I 
+investigated rather than followed.
+
+## Level 17 -> 18
+Two nearly identical files in the home directory, one line different.
+
+diff passwords.old passwords.new
+
+Output 42c42 means line 42 changed. < is the first file's version, > is the 
+second's — the password was the > line, since I wanted what it changed to.
+
+Tripped on the syntax first: joined the filenames with a hyphen instead of a 
+space, so diff saw one argument.
+
+## Level 18 -> 19
+Logging in normally disconnects immediately — something in the account's 
+shell startup logs you out.
+
+ssh bandit18@bandit.labs.overthewire.org -p 2220 cat readme
+
+Anything appended after the connection details is run as a command on the 
+remote machine. No interactive shell opens, so the logout never fires. 
+Password still typed at the prompt as usual.
+
+## Level 19 -> 20
+Home directory held a binary bandit20-do with permissions -rwsr-x---. The s 
+where the owner's execute bit would normally be an x is the setuid bit: 
+the program runs as its owner (bandit20) rather than as whoever launched it.
+
+./bandit20-do cat /etc/bandit_pass/bandit20
+
+./bandit20-do whoami returned bandit20, confirming the privilege change. 
+./bandit20-do cd failed — cd is a shell builtin, not a program on disk, 
+so there's nothing to execute.
+
+setuid is how sudo and passwd work: ordinary users need to do specific 
+privileged things, so the binary carries the privilege instead of the user. 
+Also a classic privilege-escalation target — find / -perm -4000 lists every 
+setuid binary on a system.
+
+## Level 20 -> 21
+Setuid binary suconnect connects to a port on localhost, reads what's sent 
+to it, and returns the next password if it matches the current one. 
+Needed two terminals, both logged into bandit20.
+
+Window 1: nc -l -p 1975 (-l is listen mode), then typed the bandit20 
+password — queued, waiting for a connection.
+Window 2: ./suconnect 1975
+
+The reply came back in the listener window. Order matters: the listener has 
+to be running before anything can connect to it.
+
+First time being both ends of a connection — one process listening, one 
+connecting. That's the model every service runs on.
