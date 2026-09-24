@@ -1,10 +1,10 @@
 # OverTheWire Bandit
 
-## Level 0 → 1
+## Level 0 -> 1
 Password was in a file called `readme` in the home directory.
 `ls` to see it, `cat readme` to read it.
 
-## Level 1 → 2
+## Level 1 -> 2
 Password was in file '-' in the home directory, because '-' is a known to most
 Unix tools to use as a standard input, I had to make sure to make it known that
 I wanted a pathway to '-' instead, so I used './' so make it known.
@@ -194,3 +194,44 @@ to be running before anything can connect to it.
 
 First time being both ends of a connection — one process listening, one 
 connecting. That's the model every service runs on.
+
+## Level 21 -> 22
+Cron jobs live in /etc/cron.d/, one file per job. 
+cat /etc/cron.d/cronjob_bandit22 showed it runs /usr/bin/cronjob_bandit22.sh 
+as bandit22, every minute (* * * * * = minute, hour, day of month, month, day 
+of week — all asterisks means every value). @reboot also runs it at boot. 
+&> /dev/null discards both stdout and stderr.
+
+The script itself: chmod 644 on a file in /tmp, then 
+cat /etc/bandit_pass/bandit22 > into it. So the password gets copied 
+somewhere world-readable every minute.
+
+cat /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+
+Also tripped on paths again — ls /etc/cron.d/ doesn't move me there, so bare 
+filenames afterward looked in my home directory. Full path or cd first.
+
+Lesson: a secret is only as protected as its least protected copy. 
+The original was locked down; the automated copy wasn't.
+
+## Level 22 -> 23 
+Same structure as 21, but the script builds the filename dynamically:
+
+myname=$(whoami)
+mytarget=$(echo I am user $myname | md5sum | cut -d ' ' -f 1)
+
+The cron job runs as bandit23, so inside the script whoami returns bandit23, 
+not me. Had to reproduce that string by hand rather than running whoami myself:
+
+echo I am user bandit23 
+| md5sum | cut -d ' ' -f 1 → the hash → cat /tmp/<hash>
+
+New pieces: $(...) runs a command and substitutes its output; md5sum hashes 
+its input; cut -d ' ' -f 1 splits on spaces and takes the first 
+field (md5sum prints hash + filename, I only wanted the hash).
+
+Tripped on $mytarget being empty in my shell — variables only exist inside 
+the running script. Also wrote etc/cron.d/ without the leading slash again.
+
+Lesson: reason about what a program does in its execution context, not yours. 
+Same script, different user, different output.
