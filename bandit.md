@@ -235,3 +235,28 @@ the running script. Also wrote etc/cron.d/ without the leading slash again.
 
 Lesson: reason about what a program does in its execution context, not yours. 
 Same script, different user, different output.
+
+## Level 23 -> 24
+Cron job runs as bandit24 every minute, executing any script owned by 
+bandit23 in /var/spool/bandit24/foo/, then deleting it.
+
+Wrote /tmp/yomama/sofat.sh:
+
+#!/bin/bash
+cp /etc/bandit_pass/bandit24 /tmp/yomama/pass
+chmod 644 /tmp/yomama/pass
+
+Then cp it into the spool folder and waited for pass to appear.
+
+Three permission obstacles:
+
+Output directory needed write for "other" (chmod o+w), since the script 
+runs as bandit24
+Script needed read and execute — bash has to read a script to run it. 
+Accidentally stripped it to --x--x--x and couldn't even copy it. 
+Fixed with chmod 755
+Output file needed chmod 644 inside the script, so I could read 
+something bandit24 owned
+
+New: #!/bin/bash (shebang — tells the system which interpreter runs the file).
+chmod numbers: 4 read, 2 write, 1 execute, one digit each for owner/group/other.
