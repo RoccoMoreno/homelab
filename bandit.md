@@ -276,3 +276,20 @@ Same loop idea as Python's for i in range(), different syntax: do/done, $i to
 use the variable.
 
 If output's too noisy next time: grep -v Wrong hides every failure line.
+
+## Level 25 -> 26
+bandit26's login shell (in /etc/passwd, last field) is /usr/bin/showtext, which just runs 
+more ~/text.txt and exits — no shell.
+
+more only pauses if the file is bigger than the terminal. Shrank the Mac window to ~5 lines so the 
+text overflowed and more stopped at --More--.
+
+From there: v opens the file in vi. Then inside vi, :set shell=/bin/bash and :shell launches a 
+real shell as bandit26.
+
+New: /etc/passwd (user account database — name, home, login shell per user). 
+more/less (pagers, show text a screen at a time). vi (editor that can spawn a shell).
+
+Lesson: a "shell" is just whatever program the account is assigned. Locking someone into a limited 
+program (pager, restricted shell) is weaker than it looks — if that program can launch another, 
+you're out. Real restricted-shell escape technique.
