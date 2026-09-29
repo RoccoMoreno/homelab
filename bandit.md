@@ -260,3 +260,19 @@ something bandit24 owned
 
 New: #!/bin/bash (shebang — tells the system which interpreter runs the file).
 chmod numbers: 4 read, 2 write, 1 execute, one digit each for owner/group/other.
+
+## Level 24 -> 25
+Level 24 → 25
+Daemon on port 30002 wants the bandit24 password + a 4-digit pin on one line. 
+10,000 combos — brute force.
+
+for i in {0000..9999}; do echo 'PASSWORD' $i; done | nc localhost 30002
+
+{0000..9999} generates the range with leading zeros kept. $i outside single 
+quotes so it expands (single quotes would print it literally — level 2 lesson).
+Pipe feeds all 10,000 lines into nc as input.
+
+Same loop idea as Python's for i in range(), different syntax: do/done, $i to 
+use the variable.
+
+If output's too noisy next time: grep -v Wrong hides every failure line.
