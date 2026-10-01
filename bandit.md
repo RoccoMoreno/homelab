@@ -293,3 +293,15 @@ more/less (pagers, show text a screen at a time). vi (editor that can spawn a sh
 Lesson: a "shell" is just whatever program the account is assigned. Locking someone into a limited 
 program (pager, restricted shell) is weaker than it looks — if that program can launch another, 
 you're out. Real restricted-shell escape technique.
+
+Level 26 -> 27
+First had to escape bandit26's showtext shell again 
+(small window → more pauses → v → vi → :set shell=/bin/bash → :shell).
+
+Then a setuid binary bandit27-do (-rwsr-x---, owned by bandit27) — same as bandit20-do on level 19. 
+Runs commands as bandit27:
+
+./bandit27-do cat /etc/bandit_pass/bandit27
+
+/etc/bandit_pass/<level> holds every password, readable only by that level's user — so I 
+read bandit27's through the setuid binary rather than directly.
