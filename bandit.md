@@ -316,3 +316,17 @@ was in README.
 
 Syntax notes: git clone, not clone git. Port goes inside the URL as :2220, not as -p. .git folder 
 holds the repo's whole history; the working files sit alongside it.
+
+## Level 28 -> 29
+README showed password: xxxxxxxxxx — redacted. Real one was in the git history.
+
+git log → three commits: initial, "add missing data", "fix info leak".
+ The middle one added the password, the last one removed it.
+
+git show ad8a5f8 → showed that commit's diff. Password was
+ the + line. (+ = added, - = removed, same as git diff.)
+
+Lesson: git never forgets. "Removing" a secret from a file doesn't remove it 
+from history — it's still in every earlier commit. 
+This is a real-world leak: people commit API keys, delete them in the 
+next commit, think they're safe. They aren't.
