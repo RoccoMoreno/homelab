@@ -305,3 +305,14 @@ Runs commands as bandit27:
 
 /etc/bandit_pass/<level> holds every password, readable only by that level's user — so I 
 read bandit27's through the setuid binary rather than directly.
+
+Level 27 -> 28
+Git repo at ssh://bandit27-git@bandit.labs.overthewire.org:2220/home/bandit27-git/repo. Key point: 
+must clone from my Mac, not the Bandit server — the server refuses localhost connections, 
+which is why every attempt from inside failed.
+
+git clone ssh://bandit27-git@bandit.labs.overthewire.org:2220/home/bandit27-git/repo → passwor 
+was in README.
+
+Syntax notes: git clone, not clone git. Port goes inside the URL as :2220, not as -p. .git folder 
+holds the repo's whole history; the working files sit alongside it.
