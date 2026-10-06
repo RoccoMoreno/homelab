@@ -331,7 +331,7 @@ from history — it's still in every earlier commit.
 This is a real-world leak: people commit API keys, delete them in the 
 next commit, think they're safe. They aren't.
 
-Level 29 -> 30
+##Level 29 -> 30
 README on master said <no passwords in production!> — nothing in history 
 either, because the password was on a different branch.
 
@@ -345,3 +345,15 @@ without switching to it.
 Lesson: "not in master" doesn't mean "not in the repo." Secrets hide in 
 feature branches, dev branches, and history — all of it ships when someone 
 clones. Same real-world leak as level 28, different hiding spot.
+
+##Level 30 -> 31
+README empty, no useful log, only master branch. Password was in a tag.
+
+git tag → one tag, secret.
+git show secret → the password.
+
+New: a tag is a fixed label pinned to one commit — normally marks releases (v1.0, etc), doesn't move 
+like a branch does. Can hold its own message/content, which is where the password sat.
+
+Lesson (third time now): git stores secrets in more places than the current files — history, 
+branches, and now tags. Anyone who clones gets all of it.
