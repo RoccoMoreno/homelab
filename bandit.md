@@ -330,3 +330,18 @@ Lesson: git never forgets. "Removing" a secret from a file doesn't remove it
 from history — it's still in every earlier commit. 
 This is a real-world leak: people commit API keys, delete them in the 
 next commit, think they're safe. They aren't.
+
+Level 29 -> 30
+README on master said <no passwords in production!> — nothing in history 
+either, because the password was on a different branch.
+
+git branch -a → master, dev, sploits-dev (-a = all branches incl. remote).
+git show remotes/origin/dev:README.md → password was there.
+
+New: a branch is an independent line of commits — a parallel version of the 
+project. git show <branch>:<file> reads a file from another branch 
+without switching to it.
+
+Lesson: "not in master" doesn't mean "not in the repo." Secrets hide in 
+feature branches, dev branches, and history — all of it ships when someone 
+clones. Same real-world leak as level 28, different hiding spot.
