@@ -357,3 +357,15 @@ like a branch does. Can hold its own message/content, which is where the passwor
 
 Lesson (third time now): git stores secrets in more places than the current files — history, 
 branches, and now tags. Anyone who clones gets all of it.
+
+## Level 31 -> 32
+Task was to push a file, not find one. Full git workflow:
+
+echo 'May I come in?' > key.txt — create with exact content
+git add -f key.txt — the repo's .gitignore was set to ignore key.txt; -f forces past it
+git commit -m "add key.txt" — snapshot locally
+git push origin master — upload. Server validated it and returned the password
+
+New: git add stages a file; .gitignore lists files git refuses to track (-f overrides); -m sets 
+the commit message; git push origin master sends commits to the remote (origin = where I cloned from). 
+The "remote rejected" at the end is intentional — server gives the password but doesn't save the push.
