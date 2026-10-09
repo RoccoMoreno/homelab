@@ -36,3 +36,13 @@ ufw status showed only 22 and 80 allowed. Docker writes its own iptables rules
 below ufw, so ufw rules don't apply to published container ports. Real security risk — a container 
 can be internet-exposed while the firewall appears to block it. Fix in production: 
 bind to localhost (-p 127.0.0.1:8080:80) or configure Docker to respect ufw.
+
+Droplet — serving my own files from a container (volume mount)
+Made nginx container serve my own page instead of the default.
+
+Made ~/mysite/index.html on the host
+docker run -d -p 8080:80 -v /home/rocco/mysite:/usr/share/nginx/html nginx
+-v HOST:CONTAINER mounts a host folder into the container. nginx's doc root inside the image is /usr/share/nginx/html. Host path must be absolute (pwd to get it).
+Debugging: page showed the old default. docker exec <id> ls /usr/share/nginx/html proved my file was mounted correctly → it was browser cache. Hard-refresh (Cmd+Shift+R) fixed it.
+New: docker exec runs a command inside a running container. docker ps -a shows stopped containers too. Containers don't auto-restart after reboot unless told to.
+Concept: files live on the host, container runs them — edit on host, refresh, change appears. No rebuild. This is the host/container separation real deploys are built on.
