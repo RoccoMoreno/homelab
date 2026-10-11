@@ -46,3 +46,19 @@ docker run -d -p 8080:80 -v /home/rocco/mysite:/usr/share/nginx/html nginx
 Debugging: page showed the old default. docker exec <id> ls /usr/share/nginx/html proved my file was mounted correctly → it was browser cache. Hard-refresh (Cmd+Shift+R) fixed it.
 New: docker exec runs a command inside a running container. docker ps -a shows stopped containers too. Containers don't auto-restart after reboot unless told to.
 Concept: files live on the host, container runs them — edit on host, refresh, change appears. No rebuild. This is the host/container separation real deploys are built on.
+
+Droplet — custom Docker image with a Dockerfile
+Built my own image instead of mounting files at runtime.
+
+~/mysite/Dockerfile:
+FROM nginx
+COPY index.html /usr/share/nginx/html
+docker build -t mysite-image . (-t names/tags it, . = use Dockerfile in current dir)
+docker run -d -p 8080:80 mysite-image — no -v, file is baked in
+Syntax gotcha: COPY source dest is space-separated, not comma.
+Proof it's baked in, not mounted: renamed the host index.html away → page still served, because the container has its own copy
+ inside the image. A volume mount would have broken.
+New: docker build, docker images (lists images = templates, vs docker ps = running containers). FROM = base image, COPY = copy 
+files into image.
+Concept: mount = host file borrowed live, edit-and-refresh, good for dev. Bake (Dockerfile) = self-contained portable image, 
+good for production. Teams use both
