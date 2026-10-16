@@ -62,3 +62,38 @@ New: docker build, docker images (lists images = templates, vs docker ps = runni
 files into image.
 Concept: mount = host file borrowed live, edit-and-refresh, good for dev. Bake (Dockerfile) = self-contained portable image, 
 good for production. Teams use both
+
+Droplet — multi-service with docker-compose
+Moved from docker run commands to a docker-compose.yml file, then added a second service.
+
+yaml
+services:
+  web:
+    image: mysite-image
+    ports:
+      - "8080:80"
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=...
+docker compose up -d starts all services at once; docker compose ps lists them
+compose auto-created a network (mysite_default) so containers reach each other by service name (web can find db — no IP needed)
+web published 0.0.0.0:8080->80 (internet-facing); db showed only 5432/tcp (internal, not exposed) — because I mapped a port for web 
+but not db. Safe default: not exposed.
+New: docker-compose = containers defined in a file, started together. environment variables = config passed into a container at 
+runtime (Postgres password), not baked in. Compose networking = service-name DNS between containers.
+Concept: this is config-as-a-file instead of memorized commands — the on-ramp to Kubernetes, which is the same idea at scale.
+Verified networking: docker compose exec web getent hosts db → returned db's internal IP. Web resolves db by service name.
+(ping absent — nginx image is minimal, ships only what it needs.)
+
+Cold rebuild redo — what I got wrong on my own
+Tore down the stack and rebuilt from memory. The commands came back fine; the mental model was the weak part.
+
+Ran docker compose down from ~ instead of ~/mysite → "no configuration file provided." compose reads the yml from the curren
+directory. Had to cd in first.
+Reached for docker run to rebuild — but that only starts one container by hand, skips the database and the network. 
+The compose exercise needs docker compose up, which starts the whole stack from the file.
+That manual docker run also grabbed port 8080, which would've collided with compose. Had to remove it first.
+Confused "baking" with the run-vs-compose difference. Baking happens at docker build; both run and compose just launch 
+already-built images. The real difference is run = one container manually, compose = whole stack from a file.
+Takeaway: commands stuck, concepts needed retracing. Weak spot is which tool for what, not the syntax.
