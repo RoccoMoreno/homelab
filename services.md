@@ -97,3 +97,16 @@ That manual docker run also grabbed port 8080, which would've collided with comp
 Confused "baking" with the run-vs-compose difference. Baking happens at docker build; both run and compose just launch 
 already-built images. The real difference is run = one container manually, compose = whole stack from a file.
 Takeaway: commands stuck, concepts needed retracing. Weak spot is which tool for what, not the syntax.
+
+Docker Hub — pushing an image to a registry
+Published my image so it's pullable from any machine.
+
+docker login — authenticates the machine to Docker Hub (used an access token, like the GitHub token)
+docker tag mysite-image roccomoreno/mysite-image — registry images must be named username/image. Tagging adds a second name to the 
+same image (same IMAGE ID, no rebuild).
+docker push roccomoreno/mysite-image — uploaded. My unique layer showed "Pushed"; the nginx/postgres base layers 
+showed "Mounted from library/..." — Docker Hub already had them, so only my layer actually uploaded.
+New: registry = where images live to be shared (Docker Hub is the default public one; I'd only ever pulled from it before). docker 
+tag names images; docker push/pull move them between machine and registry.
+Concept: completes the Docker arc — build → run → compose → ship. Layer sharing means images built on a common base don
+'t re-store the base; they share one copy and add only their difference.
