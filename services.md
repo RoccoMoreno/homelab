@@ -110,3 +110,14 @@ New: registry = where images live to be shared (Docker Hub is the default public
 tag names images; docker push/pull move them between machine and registry.
 Concept: completes the Docker arc — build → run → compose → ship. Layer sharing means images built on a common base don
 't re-store the base; they share one copy and add only their difference.
+
+Full Docker cold run — debrief
+Did the whole arc from a wiped slate: build → run → compose up → verify networking → tag → push → wipe local → pull back. Happy path wa and unaided.
+Gap: container/image lifecycle and sequencing. Kept jumping ahead a step.
+
+docker stop pauses; docker rm removes. A stopped container still exists and still references its image.
+docker rm = containers, docker rmi = images. Different tools.
+docker compose down removes containers + network but NOT images — still need rmi for those.
+Can't delete an image while any container (even stopped) references it. Order: down the stack → rmi the image → then it's gone.
+Proof the registry copy is real: rmi until "Deleted", then pull shows layers downloading (not "up to date").
+Takeaway: commands are fluent; the image→container→stopped→removed state machine is the part to drill.
