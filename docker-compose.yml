@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    image: mysite-image
+    ports:
+      - "8080:80"
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

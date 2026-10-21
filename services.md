@@ -121,3 +121,10 @@ docker compose down removes containers + network but NOT images — still need r
 Can't delete an image while any container (even stopped) references it. Order: down the stack → rmi the image → then it's gone.
 Proof the registry copy is real: rmi until "Deleted", then pull shows layers downloading (not "up to date").
 Takeaway: commands are fluent; the image→container→stopped→removed state machine is the part to drill.
+
+compose build: vs image: — removing the footgun
+Changed web service from image: mysite-image to build: . + image: mysite-image.
+
+build: . tells compose to build from the Dockerfile at up time. image: still names the result (so tag/push still work).
+Tested: wiped stack + image, ran one docker compose up -d → it built then started both containers, no separate build step, no "image not found."
+Lesson: the sequencing mistake I kept making (forgetting to build first) is now structurally impossible — compose builds automatically. Fix the system so the error can't happen, don't just try to remember.
