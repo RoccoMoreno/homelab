@@ -127,4 +127,66 @@ Changed web service from image: mysite-image to build: . + image: mysite-image.
 
 build: . tells compose to build from the Dockerfile at up time. image: still names the result (so tag/push still work).
 Tested: wiped stack + image, ran one docker compose up -d → it built then started both containers, no separate build step, no "image not found."
-Lesson: the sequencing mistake I kept making (forgetting to build first) is now structurally impossible — compose builds automatically. Fix the system so the error can't happen, don't just try to remember.
+Lesson: the sequencing mistake I kept making (forgetting to build first) is now structurally impossible — compose builds automatically. 
+Fix the system so the error can't happen, don't just try to remember.
+
+Flask app in a container — the application tier
+Built a Python/Flask app that serves pages via code, not static files. First real "application" container (nginx just serves files unchanged).
+
+app.py:
+
+python
+from flask import Flask
+from datetime import datetime
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "<h1>Hello from Flask in a container</h1>"
+
+@app.route("/time")
+def time():
+    return f"<h1>The time is {datetime.now()}</h1>"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+
+Dockerfile:
+
+FROM python:3.12-slim
+WORKDIR /app
+COPY app.py .
+RUN pip install flask
+CMD ["python", "app.py"]
+
+New Dockerfile instructions:
+
+WORKDIR /app — sets working dir inside the image (like cd for the build)
+RUN pip install flask — runs a command at build time, bakes the result into the image (installed Flask). Happens once, at build.
+CMD ["python","app.py"] — the command run when the container starts (launches the app). Happens every start.
+Lock it in: RUN = build-time, CMD = start-time.
+
+Commands: docker build -t flaskapp . → docker run -d -p 5000:5000 flaskapp → sudo ufw allow 5000
+
+docker logs <id> — shows a container's output. Saw Flask's "Running on 0.0.0.0:5000" startup. 
+First tool to reach for when checking what's happening inside a container.
+
+Key insight — routing: an app isn't one page, it's multiple routes. Each @app.route("URL") maps a URL to a function. / → home(), /time → time()
+. Different URL = different function = different page. This is how every website is structured (/, /login, /profile...). 
+Visiting /time ran Python fresh on each refresh (timestamp changed every load) = proof the page is computed, not a served file. 
+(I'd expected both to show on one page — that's a different concept, JS updating part of a page. 
+What I built is URL routing, the backbone of web app structure.)
+
+Static vs dynamic: nginx serves a file unchanged; Flask runs code and returns the result. 
+The app tier is the piece that can talk to a database — next step: wire Flask → Postgres.
+
+Rebuild reminder: code is baked into the image, so changing app.py needs a full rebuild (remove container → build → run), not just a browser refresh
+. Baked vs mounted, again. 
+Only the container must be removed (it holds port 5000); the old image is superseded automatically and becomes 
+a harmless dangling <none> image (docker image prune clears those).
+
+Repo reorganization: split the homelab repo into mysite/ (nginx project) and flaskapp/ (Python project) folders, because both had a file 
+named Dockerfile — dumping both in the root would've collided. 
+Used git mv (moves a file and records it in git, preserving history, vs plain mv which looks like delete + create). 
+Notes files (.md) stay in root; .env stays only on the droplet, never in git.
