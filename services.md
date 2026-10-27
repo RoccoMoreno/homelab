@@ -190,3 +190,26 @@ Repo reorganization: split the homelab repo into mysite/ (nginx project) and fla
 named Dockerfile — dumping both in the root would've collided. 
 Used git mv (moves a file and records it in git, preserving history, vs plain mv which looks like delete + create). 
 Notes files (.md) stay in root; .env stays only on the droplet, never in git.
+
+Flask → Postgres: three-tier stack working
+Connected the app tier to the database tier. Browser → Flask → Postgres, all in one compose stack.
+
+One docker-compose.yml runs both web (build: .) and db (postgres), both pulling POSTGRES_PASSWORD from .env.
+app.py /db route: psycopg2.connect(host="db", ...) — connects to the DB by service name db (compose networking, same as getent hosts db). 
+Runs SELECT version(), returns it.
+Dockerfile: RUN pip install flask psycopg2-binary (install name is psycopg2-binary, import name is psycopg2; binary = precompiled, 
+works in slim image without a compiler).
+
+Debugging run (6 bugs, all read from error output):
+
+.env “key cannot contain a space” → no spaces around = in .env.
+“port 5000 already allocated” → old standalone flask container still running on 5000; docker rm -f it.
+web container had empty PORTS → compose reused a half-formed container; docker compose down then up to recreate clean.
+Internal Server Error → docker logs flaskapp-web-1 showed traceback → KeyError: 'POSTGRES_PASSWORD'. Cause: password was set under db but not web
+. A var in .env only reaches a container if that service explicitly lists it in environment:. Added environment block to web.
+“environment must be a mapping” → used _ (underscore) instead of - (hyphen) for the YAML list item.
+“variable not set” warning → caught a scrambled typo (PASSOWRD).
+
+New: docker logs <container> + reading a Python traceback (bottom line = the real error). KeyError = asked for a dict key that doesn’t exist. 
+Env vars are per-container, not global.
+Milestone: this is a real three-tier app — the thing everything was building toward.
