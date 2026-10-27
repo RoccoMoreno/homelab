@@ -213,3 +213,17 @@ Internal Server Error → docker logs flaskapp-web-1 showed traceback → KeyErr
 New: docker logs <container> + reading a Python traceback (bottom line = the real error). KeyError = asked for a dict key that doesn’t exist. 
 Env vars are per-container, not global.
 Milestone: this is a real three-tier app — the thing everything was building toward.
+
+Using the database — CRUD, persistence (SQL)
+Added a /visitors route that creates a table, inserts a row each visit, and shows the running count. Jump from “connected to DB” to “using a DB.”
+
+CREATE TABLE IF NOT EXISTS visitors (id SERIAL PRIMARY KEY, visited_at TIMESTAMP DEFAULT NOW()) — 
+IF NOT EXISTS makes it safe to run every load; SERIAL = auto-incrementing id; DEFAULT NOW() = auto timestamp.
+INSERT INTO visitors DEFAULT VALUES — adds a row (columns self-fill).
+conn.commit() — writes aren’t saved until committed. execute stages, commit finalizes. SELECT (read) needs no commit; 
+INSERT/UPDATE/DELETE (write) do. Forgetting commit = silent data loss.
+SELECT COUNT(*) FROM visitors — counts rows; fetchone()[0] pulls the number out.
+Each refresh → count climbs. docker compose restart web → count persists, because data lives in Postgres, not the app. That’s persistence.
+New: SQL basics (CREATE/INSERT/SELECT), CRUD (Create/Read/Update/Delete = the 4 DB operations). --build on compose = pick up code changes (without it, 
+restart reuses old image).
+Debug: route crashed on startup — @app.route("visitors") missing the leading /. compose logs web → traceback named it: “must start with a slash.”
