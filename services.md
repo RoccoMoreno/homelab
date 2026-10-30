@@ -227,3 +227,14 @@ Each refresh → count climbs. docker compose restart web → count persists, be
 New: SQL basics (CREATE/INSERT/SELECT), CRUD (Create/Read/Update/Delete = the 4 DB operations). --build on compose = pick up code changes (without it, 
 restart reuses old image).
 Debug: route crashed on startup — @app.route("visitors") missing the leading /. compose logs web → traceback named it: “must start with a slash.”
+
+Three-tier cold redo — debrief
+Rebuilt flask+postgres stack from torn-down state, mostly unaided. Build, compose up, log-reading all came back on their own.
+Stumbles were typos, not concepts: docker build -t flaskapp (forgot the .), compose down (forgot docker), 
+compose log webs (wrong: it’s docker compose logs web).
+Real gap (repeated from last redo): mixing docker run and compose. 
+Started a standalone docker run container on 5000, then compose up → “port already allocated,” twice
+Fix each time was docker ps to see state, then docker rm -f the stray.
+Rule to drill: once a project has a compose file, manage it ONLY with compose. Never docker run for it. docker run = one-off throwaway containers only. 
+That rule alone prevents every port collision I hit.
+Habit that saved me every time: docker ps before acting, to know actual state.
