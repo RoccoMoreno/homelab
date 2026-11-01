@@ -238,3 +238,36 @@ Fix each time was docker ps to see state, then docker rm -f the stray.
 Rule to drill: once a project has a compose file, manage it ONLY with compose. Never docker run for it. docker run = one-off throwaway containers only. 
 That rule alone prevents every port collision I hit.
 Habit that saved me every time: docker ps before acting, to know actual state.
+
+Droplet cleanup
+Surveyed with docker ps -a + docker images. Removed the abandoned mysite stack with 
+docker compose down (compose-managed → compose), a stray “Created” container with docker rm -f, then docker system prune -a fo
+the three unused images plus build cache. Reclaimed 988MB.
+
+docker system prune -a = removes stopped containers, unused networks, any image not used by a container, and build cache. 
+Blunt — check the U (in use) column in docker images first so you know what it’ll take.
+“Created” status = container made but never started (debris from a failed run).
+End state: only flaskapp-web + db running.
+
+Docker Desktop on Mac — local development
+Installed Docker Desktop (Apple Silicon build for M3). Same engine and compose as the droplet.
+
+Ran the flaskapp stack from the repo alone. Only missing piece was .env — gitignored by design, so recreated it locally. 
+Verified with git status (“working tree clean” = .env ignored, can’t be pushed).
+Each machine gets its own .env — same code, different secrets per environment.
+localhost / 127.0.0.1 = the machine’s name for itself. Local containers are reached at localhost, no IP, no firewall step.
+
+Port 5000 collision on macOS
+compose up failed: “address already in use” on 5000, on a fresh machine. docker ps showed no container on 5000 → not Docker.
+ lsof -i :5000 showed ControlCe = macOS Control Center / AirPlay Receiver, which listens on 5000.
+
+lsof -i :PORT = shows which program holds a port (network connections count as files on Unix). 
+Use when docker ps doesn’t explain a port conflict.
+Fix: made the host port configurable — compose: "${WEB_PORT:-5000}:5000", Mac .env: WEB_PORT=5001. ${VAR:-default} = use VAR if set, 
+else default. Droplet has no WEB_PORT → stays 5000. Same compose file everywhere, per-machine behavior from .env.
+Only the host side changed; Flask inside the container still listens on 5000.
+
+Visitor number 1 locally — Mac’s Postgres is a separate database from the droplet’s. Code is shared via git; data lives in 
+each database.
+
+Workflow flip: edit and test on the Mac, commit, then update the droplet from the repo — not the other way around.
