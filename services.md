@@ -271,3 +271,28 @@ Visitor number 1 locally — Mac’s Postgres is a separate database from the dr
 each database.
 
 Workflow flip: edit and test on the Mac, commit, then update the droplet from the repo — not the other way around.
+
+WS — first EC2 instance
+Opened an AWS account on the Free plan ($100 credits, closes after 6 months or when credits run out; no card attached, so nothing can bill). Region: US East (Ohio), us-east-2. Skipped root MFA for now — do it before adding a card or anything real.
+
+EC2 = AWS’s virtual servers. Mapped every launch setting to the droplet:
+
+Region = choosing the datacenter (where the server physically lives)
+AMI (Amazon Machine Image) = the OS image, picked Ubuntu
+Instance type = the plan size (CPU/RAM), picked a Free tier eligible one
+Key pair = SSH key, but AWS generates it and hands me the private half (.pem), like the Bandit key files. macOS offered to add it to Keychain — cancelled, it’s an SSH key, not a certificate. Moved to ~/.ssh, chmod 400 (read-only for me).
+Security group = AWS’s firewall
+
+Connected: ssh -i ~/.ssh/1stAWSpair.pem ubuntu@<public-ip>. Username is ubuntu on AWS Ubuntu images, not root.
+
+Installed nginx (sudo apt update first on a fresh server, then sudo apt install nginx), confirmed with sudo systemctl status nginx. Browser wouldn’t load.
+
+Diagnosis: nginx running + sudo ufw status = inactive → nothing on the machine was blocking → the block was outside it. Security group only allowed SSH (port 22) from my IP. Added inbound rule: HTTP (port 80), source My IP → page loaded instantly, no restart.
+
+Security group = firewall in AWS’s network, outside the server. Traffic must pass it before reaching the instance. On the droplet, ufw on the machine was the gate; on AWS the first gate is in the console.
+Accounts have a default security group plus one per launch (launch-wizard-1). Find the right one via the instance’s Security tab.
+CIDR: x.x.x.x/32 = exactly one IP (just me). 0.0.0.0/0 = entire internet.
+
+Terminated the instance when done. Stop = powered off but disk kept (still costs). Terminate = deleted, nothing left to bill. Learning instances → always terminate.
+
+Takeaway: the cloud is Linux servers you rent with a different control panel. Everything from the droplet transferred.
