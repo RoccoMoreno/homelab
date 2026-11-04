@@ -296,3 +296,29 @@ CIDR: x.x.x.x/32 = exactly one IP (just me). 0.0.0.0/0 = entire internet.
 Terminated the instance when done. Stop = powered off but disk kept (still costs). Terminate = deleted, nothing left to bill. Learning instances → always terminate.
 
 Takeaway: the cloud is Linux servers you rent with a different control panel. Everything from the droplet transferred.
+
+Deploying the flaskapp stack to AWS EC2
+New account setup turned out to be AWS’s new sign-up experience (Sept 2026): signed in with a Builder ID, account lives in a “project” (“Fresh Deploy”) inside an AWS-managed Organization. There’s no root user until you upgrade, so no root MFA to set, and IAM users here are for programmatic access, not console login. AWS pre-builds the “don’t work as root” setup.
+
+Saw roles in IAM: AccountFullAccessRole (last active “2 min ago”) = the role I’m signed in through. IAM role = identity with permissions but no permanent password; you assume it and get temporary credentials. Safer than long-lived passwords.
+Spring cloud course will likely teach the classic model (root + IAM users + MFA). Same concepts.
+
+The deploy:
+
+Launched a fresh EC2 instance, reused the 1stAWSpair key pair (terminating an instance doesn’t delete its key pair). SSH: ssh -i ~/.ssh/1stAWSpair.pem ubuntu@<ip>. Username comes from the image: ubuntu on Ubuntu, ec2-user on Amazon Linux.
+Installed Docker from docs.docker.com/engine/install/ubuntu (apt repository method). Verified with systemctl status docker and docker run hello-world.
+sudo usermod -aG docker ubuntu, then exit and SSH back in (group membership loads at login).
+git clone https://github.com/RoccoMoreno/homelab.git — repo came down with everything except .env (gitignored).
+Created .env with just POSTGRES_PASSWORD=.... No WEB_PORT needed — that override was only for AirPlay on the Mac, so the compose default :-5000 applies. chmod 600 .env (a dot hides a file from ls, it doesn’t protect it).
+docker compose up -d --build. (-p belongs to docker run; with compose, ports come from the file.)
+Browser timed out → security group. Added the wrong rule first (HTTP = port 80). Fixed to Custom TCP, port 5000, My IP.
+
+Debugging lessons:
+
+“Took too long to respond” = timeout = something silently dropped the traffic (security group). “Refused to connect” = reached the machine, nothing listening on that port. Tells you which layer to check.
+Each launch creates a new security group (launch-wizard-1, -2...). Always edit via the instance’s Security tab so you’re changing the group actually attached.
+Only open the ports you use.
+
+Same compose file now runs on three machines — droplet, Mac, and AWS — with per-environment differences living only in each .env.
+
+Terminated the instance when done.
