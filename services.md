@@ -322,3 +322,25 @@ Only open the ports you use.
 Same compose file now runs on three machines — droplet, Mac, and AWS — with per-environment differences living only in each .env.
 
 Terminated the instance when done.
+
+EC2 user data — the server sets itself up
+Wrote flaskapp/user-data.sh and pasted it into Advanced details → User data at launch. App came up at :5000/visitors with no SSH at all.
+
+User data = a script EC2 runs automatically on an instance’s first boot. cloud-init (a tool on the server) picks it up and runs it as root.
+Wrote it as an outline of # comments first, then filled in each step from last session’s notes.
+
+Rules for turning manual commands into a script:
+
+Runs as root → drop every sudo.
+Nobody to answer prompts → -y only where something would ask (apt-get install), not on update, curl, chmod, etc.
+Use apt-get in scripts, not apt (stable for scripting; apt is for humans).
+Skip steps a fresh machine doesn’t need (removing old Docker versions).
+~ means root’s home in a root script → use absolute paths. Regular users’ homes are /home/<user>.
+No hard-coded secrets (script lives in a public repo) → generate one on the server: echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" > .env, then chmod 600 .env. Nobody needs to know it; web and db both read the same .env.
+Root owns everything it creates → chown -R ubuntu:ubuntu /home/ubuntu/homelab/ so the ubuntu user can manage it later. Each Ubuntu user has a same-named group.
+$ + a name = a variable. $JOESHOUSE123 would have become blank.
+
+Before committing: chmod +x user-data.sh (execute permission), git status, check for secrets.
+At launch: reused launch-wizard-2 (already had SSH + 5000), left “already base64 encoded” unchecked (AWS encodes plain text itself).
+New: git remote -v shows the repo’s remote URLs. open <folder> opens it in Finder. pbcopy < file copies a file to the clipboard.
+If a user data launch ever fails: SSH in and read /var/log/cloud-init-output.log.
