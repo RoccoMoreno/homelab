@@ -373,3 +373,34 @@ Exit code = number a command returns when it finishes. 0 = success, anything els
 Read CI logs like tracebacks: expand the failed step, the real error is near the bottom.
 
 Habit: commit messages should say what changed (“Add CI workflow...”), not “check”.
+
+Terraform — infrastructure as code
+The launch clicks from earlier sessions are now a file. terraform/main.tf defines a security group (SSH + 5000 from my IP, all outbound) and a t3.micro instance with my user data script attached.
+
+Setup on the Mac:
+
+Homebrew = macOS package manager (like apt). Installed from brew.sh. On Apple Silicon it lives in /opt/homebrew, which isn’t on the PATH (the list of folders the shell searches for commands) until you run the “Next steps” lines that add it to ~/.zprofile (runs every new terminal). >> appends to a file; > overwrites.
+AWS CLI: brew install awscli. aws login signs in through the browser and gives the CLI temporary credentials (up to 12 hrs) — no long-lived access key. It opens Safari (default browser); copied the URL into Chrome where I was signed in. Region us-east-2.
+aws sts get-caller-identity = AWS’s whoami. Showed assumed-role/AccountFullAccessRole. ARN = AWS’s universal address for any resource.
+Terraform: brew tap hashicorp/tap then brew install hashicorp/tap/terraform. A tap = an extra Homebrew catalog (like adding Docker’s apt repo).
+Found free-tier types with the CLI: aws ec2 describe-instance-types --filters Name=free-tier-eligible,Values=true --query "InstanceTypes[].InstanceType". Avoided t4g — g = Graviton (ARM), wouldn’t run my x86 AMI. Instance architecture must match the AMI.
+
+The file:
+
+provider "aws" = which cloud; picks up aws login credentials automatically.
+resource "<type>" "<nickname>" = one thing to create.
+ingress = inbound, egress = outbound. The console adds allow-all outbound automatically; Terraform doesn’t — without the egress block, apt and git clone would fail.
+aws_security_group.flaskapp.id = a reference: Terraform fills in the real ID and knows to create the group first.
+file("../flaskapp/user-data.sh") = attaches my script, path relative to terraform/.
+output = prints the public IP when done.
+
+Commands: terraform init (downloads the AWS provider) → terraform plan (shows what it would do, changes nothing — read the “Plan: X to add” line) → terraform apply (type yes) → terraform destroy. Destroy removed the instance first, then the security group — reverse of creation.
+
+Declarative: the file describes the end state; Terraform makes reality match. Running apply twice changes nothing the second time.
+(known after apply) = values AWS decides at creation (IP, IDs).
+
+Git: .terraform.lock.hcl gets committed (pins provider version). Gitignored: .terraform/ (downloaded plugins) and *.tfstate (Terraform’s record of what it built — can hold sensitive values).
+
+git add . from a subfolder only adds that folder and below — run it from the repo root.
+
+Gotchas: macOS nano is really pico, which mangles big pastes (fused my lines). Wrote the file with pbpaste > main.tf instead. Cmd+T opens a new terminal tab.
