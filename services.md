@@ -344,3 +344,32 @@ Before committing: chmod +x user-data.sh (execute permission), git status, check
 At launch: reused launch-wizard-2 (already had SSH + 5000), left “already base64 encoded” unchecked (AWS encodes plain text itself).
 New: git remote -v shows the repo’s remote URLs. open <folder> opens it in Finder. pbcopy < file copies a file to the clipboard.
 If a user data launch ever fails: SSH in and read /var/log/cloud-init-output.log.
+
+GitHub Actions — CI for flaskapp
+Added a workflow so every push to main builds the flaskapp Docker image on GitHub’s machines automatically.
+
+Workflows must live in .github/workflows/ at the repo root. Made it with mkdir -p .github/workflows (-p = create parent folders too). .github starts with a dot, so it’s hidden.
+build.yml:
+yaml
+name: Build flaskapp
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build the Docker image
+        run: docker build -t flaskapp flaskapp/
+on: push = when to run. runs-on = GitHub gives a fresh Ubuntu machine (Docker preinstalled). uses: actions/checkout = pulls the repo onto it (the machine starts empty). run: = any shell command.
+The job starts at the repo root, so the build path is flaskapp/ — relative, no leading /, pointing at the folder, not the Dockerfile.
+
+Push rejected: token lacked the workflow scope. GitHub guards workflow files extra carefully because they run code and can access secrets. Added the scope by editing the classic token (same token value, keychain still works). Token expires Dec 8 — regenerate with repo + workflow.
+
+Tested that it catches mistakes: broke the Dockerfile on purpose (xCOPY) → red X. Log showed Dockerfile:5, unknown instruction: xCOPY (did you mean copy?) — a parse error, failed before building anything. Fixed → green.
+
+Exit code = number a command returns when it finishes. 0 = success, anything else = failure. CI marks a step red when its command exits non-zero.
+Read CI logs like tracebacks: expand the failed step, the real error is near the bottom.
+
+Habit: commit messages should say what changed (“Add CI workflow...”), not “check”.
