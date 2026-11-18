@@ -19,14 +19,14 @@ resource "aws_security_group" "flaskapp" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["104.50.146.52/32"]
+    cidr_blocks = ["${var.my_ip}/32"]
   }
 
   ingress {
     from_port   = 5000
     to_port     = 5000
     protocol    = "tcp"
-    cidr_blocks = ["104.50.146.52/32"]
+    cidr_blocks = ["${var.my_ip}/32"]
   }
 
   egress {
@@ -37,8 +37,18 @@ resource "aws_security_group" "flaskapp" {
   }
 }
 
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-resolute-26.04-amd64-server-*"]
+  }
+}
+
 resource "aws_instance" "flaskapp" {
-  ami                    = "ami-0e1011556f696c3d3"
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t3.micro"
   key_name               = "1stAWSpair"
   vpc_security_group_ids = [aws_security_group.flaskapp.id]

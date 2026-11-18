@@ -404,3 +404,34 @@ Git: .terraform.lock.hcl gets committed (pins provider version). Gitignored: .te
 git add . from a subfolder only adds that folder and below — run it from the repo root.
 
 Gotchas: macOS nano is really pico, which mangles big pastes (fused my lines). Wrote the file with pbpaste > main.tf instead. Cmd+T opens a new terminal tab.
+
+Terraform part 2 — variables and data sources
+Removed the two hard-coded values that would go stale.
+
+Variables (my IP):
+
+variables.tf: variable "my_ip" { type = string } — declares it.
+main.tf: cidr_blocks = ["${var.my_ip}/32"] — var. references it; ${ } drops a value into a string (like bash $( )).
+terraform.tfvars: my_ip = "..." — loaded automatically. Gitignored (home IP + public repo). Appended with echo "terraform.tfvars" >> ../.gitignore.
+A security group IP rule is tied to the network, not the device — every device on my Wi-Fi shares one public IP. On another network, update one value and apply.
+
+Data source (AMI):
+
+data blocks read from AWS; resource blocks create.
+Found the real image name: aws ec2 describe-images --image-ids <ami> --query "Images[].[Name,OwnerId]". I’ve been running Ubuntu 26.04 “resolute”, not 24.04.
+data "aws_ami" "ubuntu" with most_recent = true, owners = ["099720109477"] (Canonical — guarantees the image is genuine, not a lookalike), and a name filter with the date replaced by *.
+Instance uses ami = data.aws_ami.ubuntu.id — no quotes, it’s a reference.
+Plan showed a newer AMI than the one I’d copied two days earlier.
+
+Mistakes: left template [ ] brackets in values — Terraform said “An attribute name is required after a dot,” with file and line. The [ ] in templates always disappear. Read the plan’s last line before moving on.
+
+Debugging a timeout layer by layer:
+
+curl https://ifconfig.me = my current public IP (the % after it is zsh’s “no newline” marker).
+terraform state show <resource> = what Terraform actually sent to AWS. terraform output = output values from state.
+SSH worked → network path fine, problem isolated to port 5000.
+cloud-init status --long → done, no errors. /var/lib/cloud/instance/user-data.txt = the script the server received.
+docker ps → both containers up.
+curl localhost:5000/visitors on the server → app works.
+curl -m 10 http://<ip>:5000/visitors from the Mac → works (-m = timeout). The browser was the problem, most likely from trying before boot finished. Use http:// explicitly, fresh tab.
+Split problems in half: test from inside the server, then from outside, then with the browser removed.
