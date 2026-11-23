@@ -12,10 +12,10 @@ Linux (grep, awk, sort, uniq), Python, pandas, regex, ip-api.com REST API
 4. Looks up the country and owning network of the top 10 IPs through the ip-api.com REST API.
 
 ## Findings
-- **____ attempts** from **____ unique IPs** in five weeks, about 900 per day. The busiest day had ____.
-- Most-tried usernames: `admin` (____), `user` (____), `ubuntu` (____). Bots target default accounts on servers, routers, and cloud images.
-- The top attacker, `20.3.253.156` (Microsoft Azure, ____), made ____ attempts, about 9% of all traffic.
-- One hosting provider, ____, controlled 3 of the top 10 IPs, with ____ attempts combined.
+- **29,286 attempts** from **1,474 unique IPs** in five weeks, about 900 per day. The busiest day had 1,602.
+- Most-tried usernames: `admin` 6,148, `user` 2,931, `ubuntu` 1,846. Bots target default accounts on servers, routers, and cloud images.
+- The top attacker, `20.3.253.156` (Microsoft Azure, Quincy,Washington), made 2,697 attempts, about 9% of all traffic.
+- One hosting provider, Unmanaged LTD, controlled 3 of the top 10 IPs, with 1,742 attempts combined.
 - Most top attackers ran from hosting providers. A few came from home and mobile ISPs, likely infected botnet devices.
 
 ## Why none got in
