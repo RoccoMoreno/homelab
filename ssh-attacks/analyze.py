@@ -25,3 +25,11 @@ print(df["user"].value_counts().head(10))
 print(df["ip"].value_counts().head(10))
 print("Unique IPs:", df["ip"].nunique())
 print(df.groupby(df["time"].dt.date).size())
+import time
+import requests
+
+print("\nTop 10 attackers:")
+for ip, count in df["ip"].value_counts().head(10).items():
+    data = requests.get(f"http://ip-api.com/json/{ip}").json()
+    print(f"{ip:<16} {count:>5}  {data.get('country')}  |  {data.get('org')}")
+    time.sleep(1.5)
