@@ -435,3 +435,5 @@ docker ps → both containers up.
 curl localhost:5000/visitors on the server → app works.
 curl -m 10 http://<ip>:5000/visitors from the Mac → works (-m = timeout). The browser was the problem, most likely from trying before boot finished. Use http:// explicitly, fresh tab.
 Split problems in half: test from inside the server, then from outside, then with the browser removed.
+
+fail2ban installed, sshd jail active (5 failures in 10 min = 10 min ban)
